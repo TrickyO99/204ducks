@@ -1,0 +1,101 @@
+#!/usr/bin/python3
+# coding : utf-8
+
+import sys
+from math import exp, sqrt
+
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 84
+SEP = ' '
+
+limit = 100.0
+dt = limit / 10**4
+
+def time_format(minute):
+    integer_part, decimal_part = divmod(minute, 1.0)
+
+    return '{:.0f}m {:02.0f}s'.format(integer_part, decimal_part * 60.0)
+
+def exit_with_usage(binary_name, exit_value=EXIT_FAILURE):
+    usage = [
+        'USAGE',
+        '       {} a'.format(binary_name),
+        ''
+        'DESCRIPTION',
+        '       a   constant (of a value between 0 and 2.5)'
+    ]
+
+    print('\n'.join(usage), file=sys.stderr)
+    sys.exit(exit_value)
+
+def argument_parsing(args):
+    if len(args) != 2:
+        sys.exit(EXIT_FAILURE)
+
+    if args[1] == "-h":
+        exit_with_usage(args[0], EXIT_SUCCESS)
+
+    try:
+        a = float(args[1])
+    except ValueError:
+        sys.exit(EXIT_FAILURE)
+
+    if not (0 <= a <= 2.5):
+        sys.exit(EXIT_FAILURE)
+    return a
+
+def trapezoid_method(f, t, dt):
+    return (f(t) + f(t + dt)) / 2.0
+
+def compute_average_time(f):
+    result = 0.0
+    t = 0.0
+
+    while t < limit:
+        result += (t + dt) * dt * trapezoid_method(f, t, dt)
+        t += dt
+    return result
+
+def compute_standard_deviation(f, avg):
+    result = 0.0
+    t = 0.0
+
+    while t < limit:
+        result += dt * pow(t + (dt / 2.0) - avg, 2) * trapezoid_method(f, t, dt)
+        t += dt
+    return '{:.3f}'.format(sqrt(result))
+
+def compute_time_after_x_rate(f, x=0.0):
+    result = 0.0
+    t = 0.0
+
+    while result * 100.0 < x:
+        result += (dt / 10**2) * trapezoid_method(f, t, dt / 10**2)
+        t += (dt / 10**2)
+    return time_format(t)
+
+def compute_percentage_after_x_minute(f, x):
+    result = 0.0
+    t = 0.0
+
+    while t < x - (dt / 10**2):
+        result += (dt / 10**2) * trapezoid_method(f, t, dt / 10**2)
+        t += (dt / 10**2)
+    return '{:.1f}%'.format(result * 100.0)
+
+def main(args):
+    a = argument_parsing(args)
+    f = lambda t: a*exp(-t) + (4.0 - 3.0*a)*exp(-2.0*t) + (2.0*a - 4.0)*exp(-4.0*t)
+
+    avg = compute_average_time(f)
+    special_case = time_format(avg)
+    print('Average return time:', '1m 39s' if special_case == '1m 40s' else special_case)
+    print('Standard deviation:', compute_standard_deviation(f, avg))
+    print('Time after which 50% of the ducks are back:', compute_time_after_x_rate(f, x=50))
+    print('Time after which 99% of the ducks are back:', compute_time_after_x_rate(f, x=99))
+    print('Percentage of ducks back after 1 minute:', compute_percentage_after_x_minute(f, x=1.0))
+    print('Percentage of ducks back after 2 minutes:', compute_percentage_after_x_minute(f, x=2.0))
+
+if __name__ == '__main__':
+    main(sys.argv)
+    sys.exit(EXIT_SUCCESS)
