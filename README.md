@@ -68,3 +68,9 @@ Percentage of ducks back after 2 minutes: 94.2%
 
 `test.sh` prints the help text and runs the two example values (`1.6` and
 `0.2`) shown above.
+
+`test_204ducks.py` is a pytest suite (run with `python -m pytest
+test_204ducks.py -v`) that invokes the script as a subprocess and covers
+the README examples above, the `a` boundary at `0`/`2.5`, and malformed
+input (missing/negative/out-of-range/non-numeric arguments). No bugs were
+found — all 12 tests pass against the script as-is.
